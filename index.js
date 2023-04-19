@@ -4,14 +4,22 @@ const app = express();
 // Import the 'node-telegram-bot-api' module
 const TelegramBot = require('node-telegram-bot-api');
 
-// Replace YOUR_BOT_TOKEN with your actual bot token
-const bot = new TelegramBot('6248027615:AAFGqxA_SPOTcyKv18SMQ9e_ERYfEHe4SQs', { polling: true });
+// Create a new instance of the TelegramBot with your Bot Token
+const botToken = '6248027615:AAFGqxA_SPOTcyKv18SMQ9e_ERYfEHe4SQs';
+const bot = new TelegramBot(botToken, { polling: true });
 
 // Keep track of verified users
 const verifiedUsers = [];
 
 // Configure the port that the server listens on
 const port = process.env.PORT || 3000;
+
+// Function to get the group chat ID
+async function getGroupId() {
+  const result = await bot.getUpdates();
+  const chatId = result[0].message.chat.id;
+  return chatId;
+}
 
 // Listen for new users joining the group
 bot.on('new_chat_members', (message) => {
@@ -58,10 +66,9 @@ bot.on('new_chat_members', (message) => {
 });
 
 // Restrict all existing users in the chat from sending messages until they are verified
-bot.getChatMembersCount(process.env.GROUP_CHAT_ID).then((count) => {
-  bot.getChat(process.env.GROUP_CHAT_ID).then((chat) => {
+getGroupId().then((chatId) => {
+  bot.getChatMembersCount(chatId).then((count) => {
     const allMembers = [...Array(count)].map((_, i) => i + 1);
-    const chatId = chat.id;
 
     allMembers.forEach((userId) => {
       bot.restrictChatMember(chatId, userId, {
