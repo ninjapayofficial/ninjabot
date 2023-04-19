@@ -4,7 +4,7 @@ const app = express();
 // Import the 'node-telegram-bot-api' module
 const TelegramBot = require('node-telegram-bot-api');
 
-// Create a new instance of the TelegramBot with your Bot Token
+// Replace YOUR_BOT_TOKEN with your actual bot token
 const bot = new TelegramBot('6248027615:AAFGqxA_SPOTcyKv18SMQ9e_ERYfEHe4SQs', { polling: true });
 
 // Keep track of verified users
