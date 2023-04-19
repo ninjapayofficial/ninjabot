@@ -1,71 +1,61 @@
 const express = require('express');
 const app = express();
 
-// Import the 'node-telegram-bot-api' module
 const TelegramBot = require('node-telegram-bot-api');
 
-// Create a new instance of the TelegramBot with your Bot Token
 const botToken = process.env.BOT_TOKEN;
 const bot = new TelegramBot(botToken, { polling: true });
 
-// Keep track of verified users
 const verifiedUsers = new Set();
+const pendingVerification = new Map();
 
-// Configure the port that the server listens on
 const port = process.env.PORT || 3000;
 
-// Function to get the group chat ID
 async function getGroupId() {
   const result = await bot.getUpdates();
   const chatId = result[0].message.chat.id;
   return chatId;
 }
 
-// Listen for new users joining the group
 bot.on('new_chat_members', (message) => {
   const user = message.new_chat_member;
   const chatId = message.chat.id;
 
-  // Check if the user is already verified
   if (verifiedUsers.has(user.id)) {
     bot.sendMessage(chatId, `Welcome back, ${user.first_name}!`);
   } else {
-    // Generate a random math problem
     const num1 = Math.floor(Math.random() * 10) + 1;
     const num2 = Math.floor(Math.random() * 10) + 1;
     const answer = num1 + num2;
 
-    // Send a welcome message and verification step to the new user
-    bot.sendMessage(chatId, `Welcome to the group, ${user.first_name}! To verify that you are human, please solve this math problem: ${num1} + ${num2} = ?`)
-      .then(() => {
-        // Listen for the user's response
-        bot.on('message', (response) => {
-          const userAnswer = parseInt(response.text);
+    bot.sendMessage(chatId, `Welcome to the group, ${user.first_name}! To verify that you are human, please solve this math problem: ${num1} + ${num2} = ?`);
+    pendingVerification.set(user.id, { chatId, answer });
 
-          // Check if the user's answer is correct
-          if (userAnswer === answer) {
-            bot.sendMessage(chatId, 'Thank you, you are verified!');
-            verifiedUsers.add(user.id);
-            // Allow the user to send messages
-            bot.restrictChatMember(chatId, user.id, {
-              can_send_messages: true
-            });
-          } else {
-            bot.sendMessage(chatId, 'Sorry, your answer is incorrect. Please try again.');
-          }
-
-          // Remove the listener to prevent multiple verifications
-          bot.removeListeners('message');
-        });
-      });
-      // Block the user from sending messages if they are not verified
-      bot.restrictChatMember(chatId, user.id, {
-        can_send_messages: false
-      });
+    bot.restrictChatMember(chatId, user.id, {
+      can_send_messages: false
+    });
   }
 });
 
-// Restrict all existing users in the chat from sending messages until they are verified
+bot.on('message', (response) => {
+  const userAnswer = parseInt(response.text);
+  const user = response.from;
+  const verification = pendingVerification.get(user.id);
+
+  if (verification && userAnswer === verification.answer) {
+    const chatId = verification.chatId;
+    bot.sendMessage(chatId, 'Thank you, you are verified!');
+    verifiedUsers.add(user.id);
+    bot.restrictChatMember(chatId, user.id, {
+      can_send_messages: true
+    });
+
+    pendingVerification.delete(user.id);
+  } else if (verification) {
+    bot.sendMessage(verification.chatId, 'Sorry, your answer is incorrect. Please try again.');
+  }
+});
+
 getGroupId().then((chatId) => {
   bot.getChatMembersCount(chatId).then((count) => {
     const allMembers = [...Array(count)].map((_, i) => i + 1);
@@ -78,18 +68,15 @@ getGroupId().then((chatId) => {
   });
 });
 
-// Unverify users who leave the group or are removed from the group
 bot.on('left_chat_member', (message) => {
   const userId = message.left_chat_member.id;
   verifiedUsers.delete(userId);
 });
 
-// Log the server start message
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
 
-// Log any errors
 bot.on('polling_error', (error) => {
   console.log(error);
 });
