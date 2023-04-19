@@ -7,6 +7,9 @@ const bot = new TelegramBot('6248027615:AAFGqxA_SPOTcyKv18SMQ9e_ERYfEHe4SQs', { 
 // Keep track of verified users
 const verifiedUsers = [];
 
+// Configure the port that the server listens on
+const port = process.env.PORT || 3000;
+
 // Listen for new users joining the group
 bot.on('new_chat_members', (message) => {
   const user = message.new_chat_member;
@@ -43,6 +46,11 @@ bot.on('new_chat_members', (message) => {
         });
       });
   }
+});
+
+// Log the server start message
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });
 
 // Log any errors
