@@ -5,11 +5,11 @@ const app = express();
 const TelegramBot = require('node-telegram-bot-api');
 
 // Create a new instance of the TelegramBot with your Bot Token
-const botToken = '6248027615:AAFGqxA_SPOTcyKv18SMQ9e_ERYfEHe4SQs';
+const botToken = process.env.BOT_TOKEN;
 const bot = new TelegramBot(botToken, { polling: true });
 
 // Keep track of verified users
-const verifiedUsers = [];
+const verifiedUsers = new Set();
 
 // Configure the port that the server listens on
 const port = process.env.PORT || 3000;
@@ -27,7 +27,7 @@ bot.on('new_chat_members', (message) => {
   const chatId = message.chat.id;
 
   // Check if the user is already verified
-  if (verifiedUsers.includes(user.id)) {
+  if (verifiedUsers.has(user.id)) {
     bot.sendMessage(chatId, `Welcome back, ${user.first_name}!`);
   } else {
     // Generate a random math problem
@@ -45,7 +45,7 @@ bot.on('new_chat_members', (message) => {
           // Check if the user's answer is correct
           if (userAnswer === answer) {
             bot.sendMessage(chatId, 'Thank you, you are verified!');
-            verifiedUsers.push(user.id);
+            verifiedUsers.add(user.id);
             // Allow the user to send messages
             bot.restrictChatMember(chatId, user.id, {
               can_send_messages: true
@@ -76,6 +76,12 @@ getGroupId().then((chatId) => {
       });
     });
   });
+});
+
+// Unverify users who leave the group or are removed from the group
+bot.on('left_chat_member', (message) => {
+  const userId = message.left_chat_member.id;
+  verifiedUsers.delete(userId);
 });
 
 // Log the server start message
