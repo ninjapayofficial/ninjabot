@@ -56,6 +56,24 @@ bot.on('new_chat_members', (message) => {
   }
 });
 
+// Listen for the /verified command
+bot.onText(/\/verified/, (msg) => {
+  const chatId = msg.chat.id;
+
+  // Get the list of verified users
+  const verifiedUsersList = verifiedUsers.map(userId => {
+    const user = bot.getChatMember(chatId, userId);
+    return user.user.first_name;
+  });
+
+  // Send the list of verified users as a message
+  if (verifiedUsersList.length > 0) {
+    bot.sendMessage(chatId, `Verified users: ${verifiedUsersList.join(', ')}`);
+  } else {
+    bot.sendMessage(chatId, 'No verified users yet.');
+  }
+});
+
 // Log the server start message
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
