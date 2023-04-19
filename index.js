@@ -1,3 +1,6 @@
+const express = require('express');
+const app = express();
+
 // Import the 'node-telegram-bot-api' module
 const TelegramBot = require('node-telegram-bot-api');
 
