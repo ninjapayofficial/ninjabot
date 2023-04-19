@@ -38,40 +38,37 @@ bot.on('new_chat_members', (message) => {
           if (userAnswer === answer) {
             bot.sendMessage(chatId, 'Thank you, you are verified!');
             verifiedUsers.push(user.id);
+            // Allow the user to send messages
+            bot.restrictChatMember(chatId, user.id, {
+              can_send_messages: true
+            });
           } else {
             bot.sendMessage(chatId, 'Sorry, your answer is incorrect. Please try again.');
           }
 
           // Remove the listener to prevent multiple verifications
           bot.removeListeners('message');
-
-          // Block the user from sending messages if they are not verified
-          if (!verifiedUsers.includes(user.id)) {
-            bot.restrictChatMember(chatId, user.id, {
-              can_send_messages: false
-            });
-          }
         });
+      });
+      // Block the user from sending messages if they are not verified
+      bot.restrictChatMember(chatId, user.id, {
+        can_send_messages: false
       });
   }
 });
 
-// Listen for the /verified command
-bot.onText(/\/verified/, (msg) => {
-  const chatId = msg.chat.id;
+// Restrict all existing users in the chat from sending messages until they are verified
+bot.getChatMembersCount(process.env.GROUP_CHAT_ID).then((count) => {
+  bot.getChat(process.env.GROUP_CHAT_ID).then((chat) => {
+    const allMembers = [...Array(count)].map((_, i) => i + 1);
+    const chatId = chat.id;
 
-  // Get the list of verified users
-  const verifiedUsersList = verifiedUsers.map(userId => {
-    const user = bot.getChatMember(chatId, userId);
-    return user.user.first_name;
+    allMembers.forEach((userId) => {
+      bot.restrictChatMember(chatId, userId, {
+        can_send_messages: false
+      });
+    });
   });
-
-  // Send the list of verified users as a message
-  if (verifiedUsersList.length > 0) {
-    bot.sendMessage(chatId, `Verified users: ${verifiedUsersList.join(', ')}`);
-  } else {
-    bot.sendMessage(chatId, 'No verified users yet.');
-  }
 });
 
 // Log the server start message
