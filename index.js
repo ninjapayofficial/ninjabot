@@ -28,7 +28,7 @@ const TOKEN = process.env.TELEGRAM_TOKEN || '6248027615:AAFGqxA_SPOTcyKv18SMQ9e_
 
   const captcha = new GroupCaptcha(TOKEN, { polling: true }, {
     size: 6,
-    language: 'de',
+    language: 'en',
     time_for_enter: 3,
   });
 
