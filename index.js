@@ -29,7 +29,7 @@ bot.on('new_chat_members', async (msg) => {
       {
         out: false,
         amount: 100,
-        memo: 'Telegram group access',
+        memo: 'Ninjapay Telegram group access',
       },
       {
         headers: {
@@ -49,50 +49,74 @@ bot.on('new_chat_members', async (msg) => {
       paid: false,
     };
 
-    await bot.sendMessage(msg.chat.id, `Please pay the 100 SAT invoice to get access to the chat: \n${paymentRequest}`);
+    // Send message with payment request and "Paid" button
+    // await bot.sendMessage(msg.chat.id, `Please pay the 100 SAT ⚡invoice⚡ to get access to the chat: \n${paymentRequest}`, {
+    //   reply_markup: {
+    //     inline_keyboard: [[{ text: 'Paid', callback_data: paymentHash }]],
+    //   },
+    // });
 
-    // Start checking payment status periodically
-    setInterval(async () => {
-      try {
-        const paymentStatusResponse = await axios.get(`https://legend.lnbits.com/api/v1/payments/${paymentHash}`, {
-          headers: {
-            'X-Api-Key': 'c6bda6e5c9374c21a5cdee58572f08e1',
-            'Content-type': 'application/json'
-          }
-        });
-
-        const paid = paymentStatusResponse.data.paid;
-        const payment = payments[paymentHash];
-
-        if (paid && !payment.paid) {
-          // Grant chat access
-          await bot.restrictChatMember(payment.chatId, payment.memberId, {
-            can_send_messages: true,
-            can_send_media_messages: true,
-            can_send_polls: true,
-            can_send_other_messages: true,
-            can_add_web_page_previews: true,
-            can_change_info: true,
-            can_invite_users: true,
-            can_pin_messages: true,
-          });
-
-          await bot.sendMessage(payment.chatId, `Payment received. Welcome to the group!`);
-          payment.paid = true;
-        }
-      } catch (error) {
-        console.error(`Error checking payment status for ${paymentHash}:`, error);
+    //
+    await bot.sendMessage(msg.chat.id, `Please pay the 100 SAT ⚡invoice⚡ to get access to the chat:`);
+    await bot.sendMessage(msg.chat.id, paymentRequest, {
+      reply_markup: {
+        inline_keyboard: [
+          [{
+            text: "I've paid!",
+            callback_data: paymentHash,
+          }]
+        ]
       }
-    }, 10000); // Check every 10 seconds
+    });
+
+    //
+
   } catch (error) {
     console.error('Error handling new chat member:', error);
+  }
+});
+
+bot.on('callback_query', async (query) => {
+  try {
+    const paymentHash = query.data;
+    const payment = payments[paymentHash];
+    
+    if (payment && !payment.paid && query.from.id === payment.memberId) {
+      const paymentStatusResponse = await axios.get(`https://legend.lnbits.com/api/v1/payments/${paymentHash}`, {
+        headers: {
+          'X-Api-Key': 'c6bda6e5c9374c21a5cdee58572f08e1',
+          'Content-type': 'application/json'
+        }
+      });
+      
+      const paid = paymentStatusResponse.data.paid;
+      
+      if (paid && !payment.paid) {
+        // Grant chat access
+        await bot.restrictChatMember(payment.chatId, payment.memberId, {
+          can_send_messages: true,
+          can_send_media_messages: true,
+          can_send_polls: true,
+          can_send_other_messages: true,
+          can_add_web_page_previews: true,
+          can_change_info: true,
+          can_invite_users: true,
+          can_pin_messages: true,
+        });
+        
+        await bot.sendMessage(payment.chatId, `Payment received. Welcome to the group!`);
+        payment.paid = true;
+      }
+    }
+  } catch (error) {
+    console.error(`Error handling callback query for ${paymentHash}:`, error);
   }
 });
 
 // Configure the port
 const port = process.env.PORT || 3000;
 
-// Start the server
+/// Start the server
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
