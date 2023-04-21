@@ -23,9 +23,9 @@ bot.on('new_chat_members', async (msg) => {
       can_invite_users: false,
       can_pin_messages: false,
     });
-
+    //https://legend.lnbits.com/api/v1/payments
     const invoiceResponse = await axios.post(
-      'https://legend.lnbits.com/api/v1/payments',
+      'https://ln.ninjapay.me/api/v1/payments',
       {
         out: false,
         amount: 100,
@@ -33,7 +33,7 @@ bot.on('new_chat_members', async (msg) => {
       },
       {
         headers: {
-          'X-Api-Key': 'c6bda6e5c9374c21a5cdee58572f08e1',
+          'X-Api-Key': '9d564675341b46e7aa42c9b0d207ae1e', //c6bda6e5c9374c21a5cdee58572f08e1
           'Content-Type': 'application/json',
         },
       }
@@ -82,9 +82,9 @@ bot.on('callback_query', async (query) => {
     const payment = payments[paymentHash];
     
     if (payment && !payment.paid && query.from.id === payment.memberId) {
-      const paymentStatusResponse = await axios.get(`https://legend.lnbits.com/api/v1/payments/${paymentHash}`, {
+      const paymentStatusResponse = await axios.get(`https://ln.ninjapay.me/api/v1/payments/${paymentHash}`, {
         headers: {
-          'X-Api-Key': 'c6bda6e5c9374c21a5cdee58572f08e1',
+          'X-Api-Key': '9d564675341b46e7aa42c9b0d207ae1e',// 9d564675341b46e7aa42c9b0d207ae1e c6bda6e5c9374c21a5cdee58572f08e1
           'Content-type': 'application/json'
         }
       });
