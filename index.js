@@ -4,7 +4,9 @@ const axios = require('axios');
 const QRCode = require('qrcode');
 const TelegramBot = require('node-telegram-bot-api');
 
-const TOKEN = process.env.TELEGRAM_TOKEN || '6248027615:AAFGqxA_SPOTcyKv18SMQ9e_ERYfEHe4SQs';
+const TOKEN = process.env.TELEGRAM_TOKEN;
+const API_KEY = process.env.API_KEY;
+
 const bot = new TelegramBot(TOKEN, { polling: true });
 
 app.use(express.json());
@@ -35,7 +37,7 @@ bot.on('new_chat_members', async (msg) => {
       },
       {
         headers: {
-          'X-Api-Key': '9d564675341b46e7aa42c9b0d207ae1e',
+          'X-Api-Key': API_KEY,
           'Content-Type': 'application/json',
         },
       }
@@ -76,7 +78,7 @@ bot.on('callback_query', async (query) => {
     if (payment && !payment.paid && query.from.id === payment.memberId) {
       const paymentStatusResponse = await axios.get(`https://ln.ninjapay.me/api/v1/payments/${paymentHash}`, {
         headers: {
-          'X-Api-Key': '9d564675341b46e7aa42c9b0d207ae1e',
+          'X-Api-Key': API_KEY,
           'Content-type': 'application/json'
         }
       });
@@ -97,8 +99,7 @@ bot.on('callback_query', async (query) => {
         });
         
         await bot.sendMessage(payment.chatId, `Payment received. Welcome to the group!`);
-        payment
-        .paid = true;
+        payment.paid = true;
       }
     }
   } catch (error) {
