@@ -6,6 +6,7 @@ const TelegramBot = require('node-telegram-bot-api');
 
 const TOKEN = process.env.TELEGRAM_TOKEN;
 const API_KEY = process.env.API_KEY;
+const API_BASE_URL = process.env.API_BASE_URL;
 
 const bot = new TelegramBot(TOKEN, { polling: true });
 
@@ -29,7 +30,7 @@ bot.on('new_chat_members', async (msg) => {
     const username = msg.new_chat_member.username || msg.new_chat_member.first_name;
 
     const invoiceResponse = await axios.post(
-      'https://ln.ninjapay.me/api/v1/payments',
+      `${API_BASE_URL}/api/v1/payments`,
       {
         out: false,
         amount: 100,
@@ -76,7 +77,7 @@ bot.on('callback_query', async (query) => {
     const payment = payments[paymentHash];
     
     if (payment && !payment.paid && query.from.id === payment.memberId) {
-      const paymentStatusResponse = await axios.get(`https://ln.ninjapay.me/api/v1/payments/${paymentHash}`, {
+      const paymentStatusResponse = await axios.get(`${API_BASE_URL}/api/v1/payments/${paymentHash}`, {
         headers: {
           'X-Api-Key': API_KEY,
           'Content-type': 'application/json'
@@ -108,7 +109,7 @@ bot.on('callback_query', async (query) => {
 });
 
 // Configure the port
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3000
 
 // Start the server
 app.listen(port, () => {
