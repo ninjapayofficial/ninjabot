@@ -111,7 +111,7 @@ bot.on('callback_query', async (query) => {
 // Configure the port
 const port = process.env.PORT || 3000
 
-// Start the server
+// Start the server.
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
