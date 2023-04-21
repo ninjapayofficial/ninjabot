@@ -40,11 +40,13 @@ bot.on('new_chat_members', async (msg) => {
       }
     );
 
-    const paymentRequest = invoiceResponse.data.payment_request;
+    const qrCode = await QRCode.toDataURL(invoiceResponse.data.payment_request);
 
     webhook.addPendingPayment(invoiceResponse.data.payment_hash, msg.chat.id, msg.new_chat_member.id);
 
-    await bot.sendMessage(msg.chat.id, `Please pay the 100 SAT invoice to get access to the chat: \n${paymentRequest}`);
+    await bot.sendPhoto(msg.chat.id, qrCode, {
+      caption: 'Please pay the 100 SAT invoice to get access to the chat',
+    });
   } catch (error) {
     console.error('Error handling new chat member:', error);
   }
