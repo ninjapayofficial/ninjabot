@@ -9,6 +9,7 @@ const pendingPayments = new Map();
 
 router.post('/webhook', async (req, res) => {
   try {
+    console.log('Received payment webhook:', req.body);
     const paymentHash = req.body.payment_hash;
 
     if (!paymentHash) {
@@ -24,6 +25,7 @@ router.post('/webhook', async (req, res) => {
     }
 
     const { chatId, userId } = paymentInfo;
+    console.log(`Processing payment for chat ${chatId} and user ${userId}`);
     await bot.restrictChatMember(chatId, userId, {
       can_send_messages: true,
       can_send_media_messages: true,
@@ -36,6 +38,7 @@ router.post('/webhook', async (req, res) => {
     });
 
     pendingPayments.delete(paymentHash);
+    console.log('Payment processed successfully');
     res.status(200).send('Payment processed successfully');
   } catch (error) {
     console.error('Error processing payment webhook:', error);
