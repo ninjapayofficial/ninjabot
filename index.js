@@ -1,28 +1,16 @@
-// const express = require('express');
-// const app = express();
-
-
-// const TOKEN = process.env.TELEGRAM_TOKEN || '6248027615:AAFGqxA_SPOTcyKv18SMQ9e_ERYfEHe4SQs';
-
-// // import { GroupCaptcha } from 'telegram-captcha';
-// const { GroupCaptcha } = require('telegram-captcha');
-
-
-// const captcha = new GroupCaptcha(TOKEN, {polling: true}, {
-//     size: 6,
-//     language: 'de',
-//     time_for_enter: 3
-// });
-
-// captcha.bot.on("new_chat_members", (msg) => captcha.generateCaptcha(msg));
-// captcha.bot.on("callback_query", (query) => captcha.clickKeyboard(query));
-
 const express = require('express');
 const app = express();
+const morgan = require('morgan');
 
 const TOKEN = process.env.TELEGRAM_TOKEN || '6248027615:AAFGqxA_SPOTcyKv18SMQ9e_ERYfEHe4SQs';
 
-// Use dynamic import for 'telegram-captcha'
+app.use(morgan('combined'));
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something went wrong!');
+});
+
 (async () => {
   const { GroupCaptcha } = await import('telegram-captcha');
 
@@ -32,8 +20,21 @@ const TOKEN = process.env.TELEGRAM_TOKEN || '6248027615:AAFGqxA_SPOTcyKv18SMQ9e_
     time_for_enter: 3,
   });
 
-  captcha.bot.on('new_chat_members', (msg) => captcha.generateCaptcha(msg));
-  captcha.bot.on('callback_query', (query) => captcha.clickKeyboard(query));
+  captcha.bot.on('new_chat_members', async (msg) => {
+    try {
+      await captcha.generateCaptcha(msg);
+    } catch (error) {
+      console.error('Error generating captcha:', error);
+    }
+  });
+
+  captcha.bot.on('callback_query', async (query) => {
+    try {
+      await captcha.clickKeyboard(query);
+    } catch (error) {
+      console.error('Error handling callback query:', error);
+    }
+  });
 
   // Sample endpoint
   app.get('/', (req, res) => {
