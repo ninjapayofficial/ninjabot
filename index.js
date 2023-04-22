@@ -54,12 +54,17 @@ bot.on('new_chat_members', async (msg) => {
       paid: false,
     };
 
-    await bot.sendMessage(msg.chat.id, `Hello @${username}! Please pay the 100 SAT ⚡invoice⚡ to get access to the chat:`);
+    const qrCodeImage = await QRCode.toDataURL(paymentRequest);
 
-    const qrCodeDataUrl = await QRCode.toDataURL(paymentRequest);
+    // Create a buffer from the base64 string
+    const qrCodeBuffer = Buffer.from(qrCodeImage.split(',')[1], 'base64');
 
-    const sentInvoiceMessage = await bot.sendPhoto(msg.chat.id, qrCodeDataUrl, {
-      caption: `Invoice: \n${paymentRequest}`,
+    const sentInvoiceMessage = await bot.sendPhoto(msg.chat.id, {
+      source: qrCodeBuffer,
+      filename: 'invoice_qr_code.png',
+      contentType: 'image/png',
+    }, {
+      caption: `Hello @${username}! Please pay the 100 SAT ⚡invoice⚡ to get access to the chat:`,
       reply_markup: {
         inline_keyboard: [
           [{
@@ -70,11 +75,12 @@ bot.on('new_chat_members', async (msg) => {
       },
     });
 
+    payments[paymentHash].sentInvoiceMessageId = sentInvoiceMessage.message_id;
+
   } catch (error) {
     console.error('Error handling new chat member:', error);
   }
 });
-
 
 bot.on('callback_query', async (query) => {
   try {
@@ -92,7 +98,8 @@ bot.on('callback_query', async (query) => {
       const paid = paymentStatusResponse.data.paid;
       
       if (paid && !payment.paid) {
-        const username = (await bot.getChatMember(payment.chatId, payment.memberId)).user.username || (await bot.getChatMember(payment.chatId, payment.memberId)).user.first_name;
+        const chatMember = await bot.getChatMember(payment.chatId, payment.memberId);
+        const username = chatMember.user.username || chatMember.user.first_name;
         
         // Grant chat access
         await bot.restrictChatMember(payment.chatId, payment.memberId, {
