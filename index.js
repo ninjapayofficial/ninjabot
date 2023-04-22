@@ -79,6 +79,8 @@ bot.on('new_chat_members', async (msg) => {
 
 bot.on('callback_query', async (query) => {
   let paymentHash;
+  const { message, data } = callbackQuery;
+  const chatId = message.chat.id;
   try {
      paymentHash = query.data;
     const payment = payments[paymentHash];
@@ -109,9 +111,9 @@ bot.on('callback_query', async (query) => {
         await bot.sendMessage(payment.chatId, `Payment received. Welcome to the group!`);
         payment.paid = true;
 
-        // Delete the invoice message and the callback query message
-        await bot.deleteMessage(payment.chatId, sentInvoiceMessage.message_id);
-        await bot.deleteMessage(payment.chatId, query.message.message_id);
+        // Delete the invoice image and the "please pay" message
+        await bot.deleteMessage(chatId, message.message_id);
+        await bot.deleteMessage(chatId, sentInvoiceMessage.message_id);
       }
     }
   } catch (error) {
