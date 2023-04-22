@@ -14,15 +14,9 @@ app.use(express.json());
 
 const payments = {};
 
-const handleError = (error, message) => {
-  console.error(`${message}:`, error);
-};
-
 bot.on('new_chat_members', async (msg) => {
   try {
-    const { chat, new_chat_member } = msg;
-    const username = new_chat_member.username || new_chat_member.first_name;
-    await bot.restrictChatMember(chat.id, new_chat_member.id, {
+    await bot.restrictChatMember(msg.chat.id, msg.new_chat_member.id, {
       can_send_messages: false,
       can_send_media_messages: false,
       can_send_polls: false,
@@ -33,7 +27,9 @@ bot.on('new_chat_members', async (msg) => {
       can_pin_messages: false,
     });
 
-    const { data } = await axios.post(
+    const username = msg.new_chat_member.username || msg.new_chat_member.first_name;
+
+    const invoiceResponse = await axios.post(
       `${API_BASE_URL}/api/v1/payments`,
       {
         out: false,
@@ -48,53 +44,70 @@ bot.on('new_chat_members', async (msg) => {
       }
     );
 
-    const { payment_request, payment_hash } = data;
+    const paymentRequest = invoiceResponse.data.payment_request;
+    const paymentHash = invoiceResponse.data.payment_hash;
 
-    const sentHelloMessage = await bot.sendMessage(chat.id, `Hello @${username}! Please pay the 100 SAT ⚡invoice⚡ to get access to the chat:`);
+    payments[paymentHash] = {
+      chatId: msg.chat.id,
+      memberId: msg.new_chat_member.id,
+      paymentRequest: paymentRequest,
+      paid: false,
+    };
 
-    const qrCodeImage = await QRCode.toDataURL(payment_request);
+    const sentHelloMessage = await bot.sendMessage(msg.chat.id, `Hello @${username}! Please pay the 100 SAT ⚡invoice⚡ to get access to the chat:`);
+
+    const qrCodeImage = await QRCode.toDataURL(paymentRequest);
+
+    // Create a buffer from the base64 string
     const qrCodeBuffer = Buffer.from(qrCodeImage.split(',')[1], 'base64');
-    const sentInvoiceMessage = await bot.sendPhoto(chat.id, qrCodeBuffer, {
-      caption: `${payment_request}`,
+
+    const sentInvoiceMessage = await bot.sendPhoto(msg.chat.id, qrCodeBuffer, {
+      caption: `${paymentRequest}`,
       reply_markup: {
         inline_keyboard: [
           [{
             text: "I've paid!",
-            callback_data: payment_hash,
+            callback_data: paymentHash,
           }]
         ],
       },
     });
-
-    payments[payment_hash] = {
-      chatId: chat.id,
-      memberId: new_chat_member.id,
-      paymentRequest: payment_request,
+     payments[paymentHash] = {
+      chatId: msg.chat.id,
+      memberId: msg.new_chat_member.id,
+      paymentRequest: paymentRequest,
       paid: false,
       sentInvoiceMessageId: sentInvoiceMessage.message_id,
       sentHelloMessageId: sentHelloMessage.message_id,
     };
   } catch (error) {
-    handleError(error, 'Error handling new chat member');
+    console.error('Error handling new chat member:', error);
   }
 });
 
+
+
+
 bot.on('callback_query', async (query) => {
-  const { message, data: paymentHash } = query;
-  const { chat } = message;
+  let paymentHash;
+  const { message, data } = query;
+  const chatId = message.chat.id;
   try {
+    paymentHash = query.data;
     const payment = payments[paymentHash];
 
     if (payment && !payment.paid && query.from.id === payment.memberId) {
-      const { data: { paid } } = await axios.get(`${API_BASE_URL}/api/v1/payments/${paymentHash}`, {
+      const paymentStatusResponse = await axios.get(`${API_BASE_URL}/api/v1/payments/${paymentHash}`, {
         headers: {
           'X-Api-Key': API_KEY,
           'Content-type': 'application/json'
         }
       });
 
+      const paid = paymentStatusResponse.data.paid;
+
       if (paid && !payment.paid) {
-        const username = query.from.username || query.from.first_name;
+        // Grant chat access
         await bot.restrictChatMember(payment.chatId, payment.memberId, {
           can_send_messages: true,
           can_send_media_messages: true,
@@ -104,15 +117,21 @@ bot.on('callback_query', async (query) => {
           can_change_info: true,
           can_invite_users: true,
           can_pin_messages: true,
-    });
+        });
 
-    await bot.sendMessage(payment.chatId, `Payment received. Welcome to the group, @${username}!`);
+        // await bot.sendMessage(payment.chatId, `Payment received. Welcome to the group!`);
+        // payment.paid = true;
+        const username = query.from.username || query.from.first_name;
+        await bot.sendMessage(payment.chatId, `Payment received. Welcome to the group, @${username}!`);
 
-    await bot.deleteMessage(chat.id, payment.sentInvoiceMessageId);
-    await bot.deleteMessage(chat.id, payment.sentHelloMessageId);
-  }
-}
-
+        // Delete the invoice image and the "please pay" message
+        // await bot.deleteMessage(chatId, message.message_id);
+        // await bot.deleteMessage(chatId, sentInvoiceMessage.message_id);
+        // await bot.deleteMessage(chatId, sentHelloMessage.message_id);
+        await bot.deleteMessage(chatId, payment.sentInvoiceMessageId);
+        await bot.deleteMessage(chatId, payment.sentHelloMessageId);
+      }
+    }
   } catch (error) {
     console.error(`Error handling callback query for ${paymentHash}:`, error);
   }
@@ -125,5 +144,4 @@ const port = process.env.PORT || 3000
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
-
 
