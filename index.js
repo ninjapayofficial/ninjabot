@@ -55,15 +55,19 @@ bot.on('new_chat_members', async (msg) => {
     };
 
     await bot.sendMessage(msg.chat.id, `Hello @${username}! Please pay the 100 SAT ⚡invoice⚡ to get access to the chat:`);
-    await bot.sendMessage(msg.chat.id, paymentRequest, {
+
+    const qrCodeImage = await QRCode.toDataURL(paymentRequest);
+
+    const sentInvoiceMessage = await bot.sendPhoto(msg.chat.id, qrCodeImage, {
+      caption: `Invoice: \n${paymentRequest}`,
       reply_markup: {
         inline_keyboard: [
           [{
             text: "I've paid!",
             callback_data: paymentHash,
           }]
-        ]
-      }
+        ],
+      },
     });
 
   } catch (error) {
@@ -101,6 +105,10 @@ bot.on('callback_query', async (query) => {
         
         await bot.sendMessage(payment.chatId, `Payment received. Welcome to the group!`);
         payment.paid = true;
+
+                // Delete the invoice message and the callback query message
+        await bot.deleteMessage(payment.chatId, sentInvoiceMessage.message_id);
+        await bot.deleteMessage(payment.chatId, query.message.message_id);
       }
     }
   } catch (error) {
