@@ -54,7 +54,7 @@ bot.on('new_chat_members', async (msg) => {
       paid: false,
     };
 
-    await bot.sendMessage(msg.chat.id, `Hello @${username}! Please pay the 100 SAT ⚡invoice⚡ to get access to the chat:`);
+    const sentHelloMessage = await bot.sendMessage(msg.chat.id, `Hello @${username}! Please pay the 100 SAT ⚡invoice⚡ to get access to the chat:`);
 
     const qrCodeImage = await QRCode.toDataURL(paymentRequest);
 
@@ -157,7 +157,7 @@ bot.on('callback_query', async (query) => {
         payment.paid = true;
 
         // Delete the invoice image and the "please pay" message
-        await bot.deleteMessage(chatId, message.message_id);
+        await bot.deleteMessage(chatId, sentHelloMessage.message_id);
         await bot.deleteMessage(chatId, sentInvoiceMessage.message_id);
       }
     }
