@@ -124,6 +124,7 @@ bot.on('new_chat_members', async (msg) => {
 // Configure the port
 bot.on('callback_query', async (query) => {
   let paymentHash;
+  let sentHelloMessage;
   const { message, data } = query;
   const chatId = message.chat.id;
   try {
@@ -157,8 +158,9 @@ bot.on('callback_query', async (query) => {
         payment.paid = true;
 
         // Delete the invoice image and the "please pay" message
-        await bot.deleteMessage(chatId, sentHelloMessage.message_id);
+        await bot.deleteMessage(chatId, message.message_id);
         await bot.deleteMessage(chatId, sentInvoiceMessage.message_id);
+        await bot.deleteMessage(chatId, sentHelloMessage.message_id);
       }
     }
   } catch (error) {
