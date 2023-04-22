@@ -56,15 +56,12 @@ bot.on('new_chat_members', async (msg) => {
 
     await bot.sendMessage(msg.chat.id, `Hello @${username}! Please pay the 100 SAT ⚡invoice⚡ to get access to the chat:`);
 
-    const qrCodeImage = await QRCode.toDataURL(paymentRequest);
+    const qrCodeDataURL = await QRCode.toDataURL(paymentRequest);
+    const qrCodeImageBuffer = Buffer.from(qrCodeDataURL.split(',')[1], 'base64');
 
-    const qrCodeBuffer = Buffer.from(qrCodeImage.split(',')[1], 'base64');
-
-    const sentInvoiceMessage = await bot.sendPhoto(msg.chat.id, {
-      source: qrCodeBuffer,
-      filename: 'invoice_qr_code.png',
+    const sentInvoiceMessage = await bot.sendPhoto(msg.chat.id, qrCodeImageBuffer, {
+      filename: 'invoice.png',
       contentType: 'image/png',
-    }, {
       caption: `Invoice: \n${paymentRequest}`,
       reply_markup: {
         inline_keyboard: [
@@ -82,7 +79,6 @@ bot.on('new_chat_members', async (msg) => {
     console.error('Error handling new chat member:', error);
   }
 });
-
 
 bot.on('callback_query', async (query) => {
   try {
@@ -111,11 +107,8 @@ bot.on('callback_query', async (query) => {
           can_invite_users: true,
           can_pin_messages: true,
         });
-
-        const user = await bot.getChatMember(payment.chatId, payment.memberId);
-        const username = user.user.username || user.user.first_name;
-
-        await bot.sendMessage(payment.chatId, `Payment received. Welcome to the group @${username}!`);
+        
+        await bot.sendMessage(payment.chatId, `Payment received. Welcome to the group, @${username}!`);
         payment.paid = true;
 
         // Delete the invoice message and the callback query message
