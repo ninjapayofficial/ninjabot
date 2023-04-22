@@ -56,19 +56,39 @@ bot.on('new_chat_members', async (msg) => {
 
     await bot.sendMessage(msg.chat.id, `Hello @${username}! Please pay the 100 SAT ⚡invoice⚡ to get access to the chat:`);
 
-    const qrCodeImage = await QRCode.toDataURL(paymentRequest);
+    // const qrCodeImage = await QRCode.toDataURL(paymentRequest);
 
-    const sentInvoiceMessage = await bot.sendPhoto(msg.chat.id, qrCodeImage, {
-      caption: `Invoice: \n${paymentRequest}`,
-      reply_markup: {
-        inline_keyboard: [
+    // const sentInvoiceMessage = await bot.sendPhoto(msg.chat.id, qrCodeImage, {
+    //   caption: `Invoice: \n${paymentRequest}`,
+    //   reply_markup: {
+    //     inline_keyboard: [
+    //       [{
+    //         text: "I've paid!",
+    //         callback_data: paymentHash,
+    //       }]
+    //     ],
+    //   },
+    // });
+
+       const qrCodeImage = await QRCode.toDataURL(paymentRequest);
+
+       // Create a buffer from the base64 string
+       const qrCodeBuffer = Buffer.from(qrCodeImage.split(',')[1], 'base64');
+
+       const sentInvoiceMessage = await bot.sendPhoto(msg.chat.id, qrCodeBuffer, {
+          caption: `Invoice: \n${paymentRequest}`,
+          reply_markup: {
+          inline_keyboard: [
           [{
-            text: "I've paid!",
-            callback_data: paymentHash,
+           text: "I've paid!",
+           callback_data: paymentHash,
           }]
-        ],
-      },
-    });
+         ],
+        },
+      });
+
+// ... rest of the code
+
 
   } catch (error) {
     console.error('Error handling new chat member:', error);
