@@ -52,8 +52,6 @@ bot.on('new_chat_members', async (msg) => {
       memberId: msg.new_chat_member.id,
       paymentRequest: paymentRequest,
       paid: false,
-      sentInvoiceMessageId: sentInvoiceMessage.message_id,
-      sentHelloMessageId: sentHelloMessage.message_id,
     };
 
     const sentHelloMessage = await bot.sendMessage(msg.chat.id, `Hello @${username}! Please pay the 100 SAT ⚡invoice⚡ to get access to the chat:`);
@@ -74,6 +72,14 @@ bot.on('new_chat_members', async (msg) => {
         ],
       },
     });
+     payments[paymentHash] = {
+      chatId: msg.chat.id,
+      memberId: msg.new_chat_member.id,
+      paymentRequest: paymentRequest,
+      paid: false,
+      sentInvoiceMessageId: sentInvoiceMessage.message_id,
+      sentHelloMessageId: sentHelloMessage.message_id,
+    };
   } catch (error) {
     console.error('Error handling new chat member:', error);
   }
