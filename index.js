@@ -123,7 +123,7 @@ bot.on('callback_query', async (query) => {
         payment.paid = true;
 
         // Delete the invoice image and the "please pay" message
-        await bot.deleteMessage(chatId, message.message_id);
+        // await bot.deleteMessage(chatId, message.message_id);
         // await bot.deleteMessage(chatId, sentInvoiceMessage.message_id);
         // await bot.deleteMessage(chatId, sentHelloMessage.message_id);
         await bot.deleteMessage(chatId, payment.sentInvoiceMessageId);
