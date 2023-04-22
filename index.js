@@ -124,8 +124,6 @@ bot.on('new_chat_members', async (msg) => {
 // Configure the port
 bot.on('callback_query', async (query) => {
   let paymentHash;
-  let sentHelloMessage;
-  let sentInvoiceMessage;
   const { message, data } = query;
   const chatId = message.chat.id;
   try {
