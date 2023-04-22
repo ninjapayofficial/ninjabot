@@ -118,8 +118,10 @@ bot.on('callback_query', async (query) => {
           can_invite_users: true,
           can_pin_messages: true,
         });
+        
+        const username = msg.new_chat_member.username || msg.new_chat_member.first_name;
 
-        await bot.sendMessage(payment.chatId, `Payment received. Welcome to the group!`);
+        await bot.sendMessage(payment.chatId, `Payment received. Welcome to the group, @${username}!`);
         payment.paid = true;
 
         // Delete the invoice image and the "please pay" message
