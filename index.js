@@ -56,9 +56,9 @@ bot.on('new_chat_members', async (msg) => {
 
     await bot.sendMessage(msg.chat.id, `Hello @${username}! Please pay the 100 SAT ⚡invoice⚡ to get access to the chat:`);
 
-    const qrCodeImage = await QRCode.toDataURL(paymentRequest);
+    const qrCodeDataUrl = await QRCode.toDataURL(paymentRequest);
 
-    const sentInvoiceMessage = await bot.sendPhoto(msg.chat.id, qrCodeImage, {
+    const sentInvoiceMessage = await bot.sendPhoto(msg.chat.id, qrCodeDataUrl, {
       caption: `Invoice: \n${paymentRequest}`,
       reply_markup: {
         inline_keyboard: [
@@ -70,12 +70,11 @@ bot.on('new_chat_members', async (msg) => {
       },
     });
 
-    payments[paymentHash].sentInvoiceMessageId = sentInvoiceMessage.message_id;
-
   } catch (error) {
     console.error('Error handling new chat member:', error);
   }
 });
+
 
 bot.on('callback_query', async (query) => {
   try {
