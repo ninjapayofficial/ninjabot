@@ -77,14 +77,59 @@ bot.on('new_chat_members', async (msg) => {
   }
 });
 
+// bot.on('callback_query', async (query) => {
+//   let paymentHash;
+//   try {
+//      paymentHash = query.data;
+//     const payment = payments[paymentHash];
+    
+//     if (payment && !payment.paid && query.from.id === payment.memberId) {
+//       const paymentStatusResponse = await axios.get(`${API_BASE_URL}/api/v1/payments/${paymentHash}`, {
+//         headers: {
+//           'X-Api-Key': API_KEY,
+//           'Content-type': 'application/json'
+//         }
+//       });
+      
+//       const paid = paymentStatusResponse.data.paid;
+      
+//       if (paid && !payment.paid) {
+//         // Grant chat access
+//         await bot.restrictChatMember(payment.chatId, payment.memberId, {
+//           can_send_messages: true,
+//           can_send_media_messages: true,
+//           can_send_polls: true,
+//           can_send_other_messages: true,
+//           can_add_web_page_previews: true,
+//           can_change_info: true,
+//           can_invite_users: true,
+//           can_pin_messages: true,
+//         });
+        
+//         await bot.sendMessage(payment.chatId, `Payment received. Welcome to the group!`);
+//         payment.paid = true;
+
+//         // Delete the invoice message and the callback query message
+//         await bot.deleteMessage(payment.chatId, sentInvoiceMessage.message_id);
+//         await bot.deleteMessage(payment.chatId, query.message.message_id);
+//       }
+//     }
+//   } catch (error) {
+//     console.error(`Error handling callback query for ${paymentHash}:`, error);
+//   }
+// });
+
+
+
+// Configure the port
 bot.on('callback_query', async (query) => {
   let paymentHash;
-  const { message, data } = callbackQuery;
+  const { message, data } = query;
   const chatId = message.chat.id;
   try {
-     paymentHash = query.data;
+    paymentHash = query.data;
     const payment = payments[paymentHash];
-    
+
     if (payment && !payment.paid && query.from.id === payment.memberId) {
       const paymentStatusResponse = await axios.get(`${API_BASE_URL}/api/v1/payments/${paymentHash}`, {
         headers: {
@@ -92,9 +137,9 @@ bot.on('callback_query', async (query) => {
           'Content-type': 'application/json'
         }
       });
-      
+
       const paid = paymentStatusResponse.data.paid;
-      
+
       if (paid && !payment.paid) {
         // Grant chat access
         await bot.restrictChatMember(payment.chatId, payment.memberId, {
@@ -107,7 +152,7 @@ bot.on('callback_query', async (query) => {
           can_invite_users: true,
           can_pin_messages: true,
         });
-        
+
         await bot.sendMessage(payment.chatId, `Payment received. Welcome to the group!`);
         payment.paid = true;
 
@@ -121,9 +166,6 @@ bot.on('callback_query', async (query) => {
   }
 });
 
-
-
-// Configure the port
 const port = process.env.PORT || 3000
 
 // Start the server.
