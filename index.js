@@ -56,12 +56,9 @@ bot.on('new_chat_members', async (msg) => {
 
     await bot.sendMessage(msg.chat.id, `Hello @${username}! Please pay the 100 SAT ⚡invoice⚡ to get access to the chat:`);
 
-    const qrCodeDataURL = await QRCode.toDataURL(paymentRequest);
-    const qrCodeImageBuffer = Buffer.from(qrCodeDataURL.split(',')[1], 'base64');
+    const qrCodeImage = await QRCode.toDataURL(paymentRequest);
 
-    const sentInvoiceMessage = await bot.sendPhoto(msg.chat.id, qrCodeImageBuffer, {
-      filename: 'invoice.png',
-      contentType: 'image/png',
+    const sentInvoiceMessage = await bot.sendPhoto(msg.chat.id, qrCodeImage, {
       caption: `Invoice: \n${paymentRequest}`,
       reply_markup: {
         inline_keyboard: [
@@ -96,6 +93,8 @@ bot.on('callback_query', async (query) => {
       const paid = paymentStatusResponse.data.paid;
       
       if (paid && !payment.paid) {
+        const username = (await bot.getChatMember(payment.chatId, payment.memberId)).user.username || (await bot.getChatMember(payment.chatId, payment.memberId)).user.first_name;
+        
         // Grant chat access
         await bot.restrictChatMember(payment.chatId, payment.memberId, {
           can_send_messages: true,
@@ -108,7 +107,7 @@ bot.on('callback_query', async (query) => {
           can_pin_messages: true,
         });
         
-        await bot.sendMessage(payment.chatId, `Payment received. Welcome to the group, @${username}!`);
+        await bot.sendMessage(payment.chatId, `Payment received. Welcome to the group @${username}!`);
         payment.paid = true;
 
         // Delete the invoice message and the callback query message
@@ -128,3 +127,4 @@ const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
+
