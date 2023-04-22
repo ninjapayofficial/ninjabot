@@ -78,8 +78,9 @@ bot.on('new_chat_members', async (msg) => {
 });
 
 bot.on('callback_query', async (query) => {
+  let paymentHash;
   try {
-    const paymentHash = query.data;
+     paymentHash = query.data;
     const payment = payments[paymentHash];
     
     if (payment && !payment.paid && query.from.id === payment.memberId) {
