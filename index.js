@@ -62,7 +62,7 @@ bot.on('new_chat_members', async (msg) => {
     const qrCodeBuffer = Buffer.from(qrCodeImage.split(',')[1], 'base64');
 
     const sentInvoiceMessage = await bot.sendPhoto(msg.chat.id, qrCodeBuffer, {
-      caption: `Invoice: \n${paymentRequest}`,
+      caption: `${paymentRequest}`,
       reply_markup: {
         inline_keyboard: [
           [{
@@ -78,10 +78,12 @@ bot.on('new_chat_members', async (msg) => {
 });
 
 bot.on('callback_query', async (query) => {
+  let paymentHash;
   try {
-    const paymentHash = query.data;
+    paymentHash = query.data;
     const payment = payments[paymentHash];
-        if (payment && !payment.paid && query.from.id === payment.memberId) {
+    
+    if (payment && !payment.paid && query.from.id === payment.memberId) {
       const paymentStatusResponse = await axios.get(`${API_BASE_URL}/api/v1/payments/${paymentHash}`, {
         headers: {
           'X-Api-Key': API_KEY,
@@ -107,7 +109,7 @@ bot.on('callback_query', async (query) => {
         await bot.sendMessage(payment.chatId, `Payment received. Welcome to the group!`);
         payment.paid = true;
 
-        // Delete the invoice message and the callback query message
+                // Delete the invoice message and the callback query message
         await bot.deleteMessage(payment.chatId, sentInvoiceMessage.message_id);
         await bot.deleteMessage(payment.chatId, query.message.message_id);
       }
@@ -116,6 +118,7 @@ bot.on('callback_query', async (query) => {
     console.error(`Error handling callback query for ${paymentHash}:`, error);
   }
 });
+
 
 // Configure the port
 const port = process.env.PORT || 3000
