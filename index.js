@@ -56,55 +56,22 @@ bot.on('new_chat_members', async (msg) => {
 
     await bot.sendMessage(msg.chat.id, `Hello @${username}! Please pay the 100 SAT ⚡invoice⚡ to get access to the chat:`);
 
-    // ... rest of the code
+    const qrCodeImage = await QRCode.toDataURL(paymentRequest);
 
-const qrCodeImage = await QRCode.toDataURL(paymentRequest);
+    // Create a buffer from the base64 string
+    const qrCodeBuffer = Buffer.from(qrCodeImage.split(',')[1], 'base64');
 
-// Create a buffer from the base64 string
-const qrCodeBuffer = Buffer.from(qrCodeImage.split(',')[1], 'base64');
-
-const sentInvoiceMessage = await bot.sendPhoto(msg.chat.id, qrCodeBuffer, {
-  caption: `Invoice: \n${paymentRequest}`,
-  reply_markup: {
-    inline_keyboard: [
-      [{
-        text: "I've paid!",
-        callback_data: paymentHash,
-      }]
-    ],
-  },
-});
-
-// ... rest of the code
-
-
-//       // ... rest of the code
-
-//           const qrCodeImage = await QRCode.toDataURL(paymentRequest);
-
-//           // Create a buffer from the base64 string
-//           const qrCodeBuffer = Buffer.from(qrCodeImage.split(',')[1], 'base64');
-
-//           const sentInvoiceMessage = await bot.sendPhoto(msg.chat.id, {
-//            source: qrCodeBuffer,
-//            filename: 'invoice_qr_code.png',
-//            contentType: 'image/png',
-//           }, {
-//             caption: `Invoice: \n${paymentRequest}`,
-//             reply_markup: {
-//             inline_keyboard: [
-//            [{
-//             text: "I've paid!",
-//             callback_data: paymentHash,
-//           }]
-//         ],
-//       },
-//     });
-
-// // ... rest of the code
-
-
-
+    const sentInvoiceMessage = await bot.sendPhoto(msg.chat.id, qrCodeBuffer, {
+      caption: `Invoice: \n${paymentRequest}`,
+      reply_markup: {
+        inline_keyboard: [
+          [{
+            text: "I've paid!",
+            callback_data: paymentHash,
+          }]
+        ],
+      },
+    });
   } catch (error) {
     console.error('Error handling new chat member:', error);
   }
@@ -114,8 +81,7 @@ bot.on('callback_query', async (query) => {
   try {
     const paymentHash = query.data;
     const payment = payments[paymentHash];
-    
-    if (payment && !payment.paid && query.from.id === payment.memberId) {
+        if (payment && !payment.paid && query.from.id === payment.memberId) {
       const paymentStatusResponse = await axios.get(`${API_BASE_URL}/api/v1/payments/${paymentHash}`, {
         headers: {
           'X-Api-Key': API_KEY,
@@ -141,7 +107,7 @@ bot.on('callback_query', async (query) => {
         await bot.sendMessage(payment.chatId, `Payment received. Welcome to the group!`);
         payment.paid = true;
 
-                // Delete the invoice message and the callback query message
+        // Delete the invoice message and the callback query message
         await bot.deleteMessage(payment.chatId, sentInvoiceMessage.message_id);
         await bot.deleteMessage(payment.chatId, query.message.message_id);
       }
@@ -158,3 +124,4 @@ const port = process.env.PORT || 3000
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
+

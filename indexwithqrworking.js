@@ -56,44 +56,52 @@
 
 //     await bot.sendMessage(msg.chat.id, `Hello @${username}! Please pay the 100 SAT ⚡invoice⚡ to get access to the chat:`);
 
-//     // const qrCodeImage = await QRCode.toDataURL(paymentRequest);
+//     // ... rest of the code
 
-//     // const sentInvoiceMessage = await bot.sendPhoto(msg.chat.id, qrCodeImage, {
-//     //   caption: `Invoice: \n${paymentRequest}`,
-//     //   reply_markup: {
-//     //     inline_keyboard: [
-//     //       [{
-//     //         text: "I've paid!",
-//     //         callback_data: paymentHash,
-//     //       }]
-//     //     ],
-//     //   },
-//     // });
+// const qrCodeImage = await QRCode.toDataURL(paymentRequest);
 
-//       // ... rest of the code
+// // Create a buffer from the base64 string
+// const qrCodeBuffer = Buffer.from(qrCodeImage.split(',')[1], 'base64');
 
-//           const qrCodeImage = await QRCode.toDataURL(paymentRequest);
-
-//           // Create a buffer from the base64 string
-//           const qrCodeBuffer = Buffer.from(qrCodeImage.split(',')[1], 'base64');
-
-//           const sentInvoiceMessage = await bot.sendPhoto(msg.chat.id, {
-//            source: qrCodeBuffer,
-//            filename: 'invoice_qr_code.png',
-//            contentType: 'image/png',
-//           }, {
-//             caption: `Invoice: \n${paymentRequest}`,
-//             reply_markup: {
-//             inline_keyboard: [
-//            [{
-//             text: "I've paid!",
-//             callback_data: paymentHash,
-//           }]
-//         ],
-//       },
-//     });
+// const sentInvoiceMessage = await bot.sendPhoto(msg.chat.id, qrCodeBuffer, {
+//   caption: `Invoice: \n${paymentRequest}`,
+//   reply_markup: {
+//     inline_keyboard: [
+//       [{
+//         text: "I've paid!",
+//         callback_data: paymentHash,
+//       }]
+//     ],
+//   },
+// });
 
 // // ... rest of the code
+
+
+// //       // ... rest of the code
+
+// //           const qrCodeImage = await QRCode.toDataURL(paymentRequest);
+
+// //           // Create a buffer from the base64 string
+// //           const qrCodeBuffer = Buffer.from(qrCodeImage.split(',')[1], 'base64');
+
+// //           const sentInvoiceMessage = await bot.sendPhoto(msg.chat.id, {
+// //            source: qrCodeBuffer,
+// //            filename: 'invoice_qr_code.png',
+// //            contentType: 'image/png',
+// //           }, {
+// //             caption: `Invoice: \n${paymentRequest}`,
+// //             reply_markup: {
+// //             inline_keyboard: [
+// //            [{
+// //             text: "I've paid!",
+// //             callback_data: paymentHash,
+// //           }]
+// //         ],
+// //       },
+// //     });
+
+// // // ... rest of the code
 
 
 
