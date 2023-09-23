@@ -2,7 +2,7 @@
 // const app = express();
 // const morgan = require('morgan');
 
-// const TOKEN = process.env.TELEGRAM_TOKEN || '6248027615:AAFGqxA_SPOTcyKv18SMQ9e_ERYfEHe4SQs';
+// const TOKEN = process.env.TELEGRAM_TOKEN || '';
 
 // app.use(morgan('combined'));
 
